@@ -104,19 +104,80 @@ impl <T: Ord> Tree<T> {
             }
         }
     }
+    
+    fn list_tree_elements(&self) -> Vec<&T> {
+        let mut sorted_elements = Vec::new();
+        self.list_tree_elements_aux(&self.root, &mut sorted_elements);
+        sorted_elements
+    }
+    
+    fn list_tree_elements_aux<'a>(&'a self, node: &'a Option<Box<Node<T>>>, sorted_elements: &mut Vec<&'a T>) -> (){
+        if let Some(n) = node {
+            self.list_tree_elements_aux(&n.left, sorted_elements);
+            
+            sorted_elements.push(&n.elem);
+            
+            self.list_tree_elements_aux(&n.right, sorted_elements);
+        }
+    }
+    
+    
+    pub fn remove(&mut self, value: T) {
+        if let Some(node) = self.root.take() {
+            self.root = Self::remove_from(node, value);
+        }
+    }
+
+    fn remove_from(mut node: Box<Node<T>>, value: T) -> Option<Box<Node<T>>> {
+    if value < node.elem {
+        // Value is less than current node, recurse on the left subtree
+        if let Some(left) = node.left.take() {
+            node.left = Self::remove_from(left, value);
+        }
+        return Some(node);
+    } else if value > node.elem {
+        // Value is greater than current node, recurse on the right subtree
+        if let Some(right) = node.right.take() {
+            node.right = Self::remove_from(right, value);
+        }
+        return Some(node);
+    }
+
+    // Found the node to be removed
+    match (node.left.take(), node.right.take()) {
+        (None, None) => None,                       // Case 1: No children
+        (Some(left), None) => Some(left),           // Case 2: Only left child
+        (None, Some(right)) => Some(right),         // Case 3: Only right child
+        (Some(left), Some(right)) => {
+            // Case 4: Two children
+            let mut new_root = left;
+            let mut ptr = &mut new_root;
+
+            while let Some(ref mut next) = ptr.right {
+                ptr = next;
+            }
+
+            // Attach the right subtree to the rightmost node of the left subtree
+            ptr.right = Some(right);
+            Some(new_root)
+        }
+    }
+}
 }
 
 fn main() {
     let mut tree = Tree::new();
+    tree.add(6);
     tree.add(2);
-    // tree.add(6);
-    // tree.add(3);
-    // tree.add(2);
-    // tree.add(5);
-    // tree.add(9);
-    // tree.add(12);
-    // tree.add(1);
+    tree.add(3);
+    tree.add(2);
+    tree.add(5);
+    tree.add(9);
+    tree.add(12);
+    tree.add(1);
     let greatest_elem = tree.remove_and_return_greatest();
     println!("Maior elemento: {:?}", greatest_elem);
+    tree.remove(6);
+    println!("Elementos Ordenados: {:?}", tree.list_tree_elements());
     println!("{:?}", tree);
 }
