@@ -3,7 +3,7 @@ use std::fs::File;
 use std::io::{Read, Write, BufWriter};
 use std::cmp::Ordering;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 enum Huffman {
     Leaf { c: char, freq: u32 },
     Node { freq: u32, left: Box<Huffman>, right: Box<Huffman> },
